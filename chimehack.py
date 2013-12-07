@@ -93,11 +93,12 @@ class Garden:
             discovery_garden = discovery_tuple[1]
             discovery_comment = discovery_tuple[2]
             discovery_comment_time = discovery_tuple[3]
-            discovery_without_count = (discovery_comment_ID, discovery_garden, discovery_comment, discovery_comment_time)
+            discovery_bookmarked_status = 0
+            discovery_without_count = (discovery_comment_ID, discovery_garden, discovery_comment, discovery_comment_time, discovery_bookmarked_status)
             feed.append(discovery_without_count) 
 
         # get bookmarks and comments about yourself
-        c.execute("""select comment.ID, garden.Name, comment.Comment, comment.Created, bookmark.BookmarkTimestamp
+        c.execute("""select comment.ID, garden.Name, comment.Comment, comment.Created, bookmark.BookmarkerID IS NULL, bookmark.BookmarkTimestamp
                      from gardenComments comment left join BookmarkedStories bookmark ON bookmark.CommentID = comment.ID
                                                  join Garden garden on comment.GardenID = garden.ID
                      where bookmark.BookmarkerID = """ + myID + """ OR
@@ -110,7 +111,8 @@ class Garden:
             garden_name = comment_tuple[1]
             comment = comment_tuple[2]
             time = comment_tuple[3]
-            bookmarked_comments_without_bookmark_timestamp.append((comment_ID, garden_name, comment, time))
+            bookmarked = comment_tuple[4]
+            bookmarked_comments_without_bookmark_timestamp.append((comment_ID, garden_name, comment, time, bookmarked))
         feed.extend(bookmarked_comments_without_bookmark_timestamp)
 
         feed = remove_duplicates_helper(feed)
@@ -121,7 +123,7 @@ class Garden:
         feed = []
         myID = str(self.get_ID())
         # show stories I bookmarked first
-        c.execute("""select comment.ID, Garden.Name, comment.Comment, comment.Created
+        c.execute("""select comment.ID, Garden.Name, comment.Comment, comment.Created, 1=1
                      from gardenComments comment join Garden on comment.GardenID = Garden.ID
                                                  join BookmarkedStories bookmark on comment.ID = bookmark.CommentID
                      where Garden.ID = """ + str(garden_id) + """ AND
@@ -131,7 +133,7 @@ class Garden:
         feed.extend(c.fetchall())
 
         # show the rest of the stories
-        c.execute("""select comment.ID, Garden.Name, comment.Comment, comment.Created
+        c.execute("""select comment.ID, Garden.Name, comment.Comment, comment.Created, 1=0
                      from gardenComments comment join Garden on comment.GardenID = Garden.ID
                                                  left join BookmarkedStories bookmark on comment.ID = bookmark.CommentID
                      where Garden.ID = """ + str(garden_id) + """ AND
