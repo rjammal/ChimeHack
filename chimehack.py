@@ -62,6 +62,7 @@ class Garden:
         return self.city
 
     def addComment(self, commenter_ID, category_ID, comment):
+        category_ID += 1
         c.execute("""insert into gardenComments (GardenID, CommenterGardenID, CategoryID, Comment, Created)
                      values (""" + str(self.get_ID()) + ", " + str(commenter_ID) + ", " + str(category_ID) + ", '" + comment + "', datetime('now'))")
     
@@ -98,12 +99,14 @@ class Garden:
             feed.append(discovery_without_count) 
 
         # get bookmarks and comments about yourself
-        c.execute("""select comment.ID, garden.Name, comment.Comment, comment.Created, bookmark.BookmarkerID IS NULL, bookmark.BookmarkTimestamp
-                     from gardenComments comment left join BookmarkedStories bookmark ON bookmark.CommentID = comment.ID
+        c.execute("""select comment.ID, garden.Name, comment.Comment, comment.Created, bookmark.BookmarkerID = """ + myID + """, 
+                            bookmark.BookmarkTimestamp
+                     from gardenComments comment left join BookmarkedStories bookmark ON bookmark.CommentID = comment.ID AND
+                                                                                         bookmark.BookmarkerID = """ + myID + """
                                                  join Garden garden on comment.GardenID = garden.ID
                      where bookmark.BookmarkerID = """ + myID + """ OR
                            comment.GardenID = """ + myID + """
-                     order by bookmark.BookmarkTimestamp desc""")
+                     order by bookmark.BookmarkTimestamp desc, comment.Created desc""")
         bookmarked_comments = c.fetchall()
         bookmarked_comments_without_bookmark_timestamp = []
         for comment_tuple in bookmarked_comments:
@@ -112,6 +115,8 @@ class Garden:
             comment = comment_tuple[2]
             time = comment_tuple[3]
             bookmarked = comment_tuple[4]
+            if bookmarked == None:
+                bookmarked = 0
             bookmarked_comments_without_bookmark_timestamp.append((comment_ID, garden_name, comment, time, bookmarked))
         feed.extend(bookmarked_comments_without_bookmark_timestamp)
 
@@ -122,6 +127,8 @@ class Garden:
 
         feed = []
         myID = str(self.get_ID())
+        category_id += 1
+        
         # show stories I bookmarked first
         c.execute("""select comment.ID, Garden.Name, comment.Comment, comment.Created, 1=1
                      from gardenComments comment join Garden on comment.GardenID = Garden.ID
@@ -181,26 +188,33 @@ g4 = Garden('Beyonce', 'Performer', 'USA')
 g5 = Garden('Aung San Suu Kyi', 'Politician', 'Myanmar')
 
         
-g3.addComment(g1.get_ID(), 2, "Michelle Obama promotes community farming")#1
-g3.addComment(g1.get_ID(), 5, "Michelle serves as a role model for women everywhere")#2
-g4.addComment(g2.get_ID(), 3, "Beyonce appeals to a global community to spread her message")#3
-g3.addComment(g2.get_ID(), 3, "Michelle fights for LGBT rights")#4
-g3.addComment(g1.get_ID(), 2, "Michelle is working to wipe out childhood obesity")#5
-g3.addComment(g5.get_ID(), 2, "Michelle is family oriented")#6
-g2.addComment(g4.get_ID(), 1, "Jane is one of the most driven people I know" )#8
+g3.addComment(g1.get_ID(), 1, "Michelle Obama promotes community farming")#1
+g3.addComment(g1.get_ID(), 4, "Michelle serves as a role model for women everywhere")#2
+g4.addComment(g2.get_ID(), 2, "Beyonce appeals to a global community to spread her message")#3
+g3.addComment(g2.get_ID(), 2, "Michelle fights for LGBT rights")#4
+g3.addComment(g1.get_ID(), 1, "Michelle is working to wipe out childhood obesity")#5
+g3.addComment(g5.get_ID(), 1, "Michelle is family oriented")#6
+g2.addComment(g4.get_ID(), 0, "Jane is one of the most driven people I know" )#7
+g1.addComment(g4.get_ID(), 3, "Marie Curie was a pioneer on the cutting edge of her research") #8
 
-
-#g1.addComment(g2.get_ID(), 4, "Kate writing a story about Rosemary")#4
 
 
 g1.likeComment(5)
 g2.likeComment(1)# Rosalind likes comment 1
 g2.likeComment(5)
 g3.likeComment(5)
+##i = 0
+##while i < 10000:
+##    i +=1
 g4.likeComment(5)
 g5.likeComment(5)
 g3.likeComment(3)
+##i = 0
+##while i < 10000:
+##    i += 1
 g5.likeComment(7)
+g3.likeComment(8)
+g2.likeComment(8)
 
 #print(get_comment_influence(1))
 
@@ -210,7 +224,11 @@ g5.likeComment(7)
 
 #c.execute("""select * from bookmarkedStories""")
 #print(c.fetchall())
-print('Michelle Feed:', g3.get_my_feed())
-print('Michelle Garden Section 2 as viewed by Marie Curie: ', g1.get_garden_section_feed(3, 2))
+print('Michelle Feed:')
+for row in g3.get_my_feed():
+    print(row)
+print('Michelle Garden Section 2 as viewed by Marie Curie: ')
+for row in g1.get_garden_section_feed(3, 1):
+    print(row)
 
 
