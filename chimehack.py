@@ -162,13 +162,15 @@ def get_comment_influence(comment_ID):
     else:
         return 3
 
+
 def remove_duplicates_helper(list_with_dupes): 
    seen = {}
    result = []
    for item in list_with_dupes:
-       if item in seen:
+       comment_id = item[0]
+       if comment_id in seen:
            continue
-       seen[item] = 1
+       seen[comment_id] = 1
        result.append(item)
    return result
 
