@@ -82,7 +82,8 @@ class Garden:
                      from gardenComments comment left join bookmarkedStories bookmarks on bookmarks.CommentID = comment.ID
                                                  left join garden on comment.GardenID = garden.ID
                      where bookmarks.BookmarkerID <> """ + myID + """ AND
-                           comment.GardenID <> """ + myID + """ 
+                           comment.GardenID <> """ + myID + """ AND
+                           comment.CommenterGardenID <> """ + myID + """
                      group by garden.Name, comment.Comment, comment.Created
                      order by Count desc""")
         discovery_list = c.fetchall()
@@ -170,7 +171,7 @@ def remove_duplicates_helper(list_with_dupes):
    return result
 
 g1 = Garden('Marie Curie', 'Chemist', 'France')
-g2 = Garden('Rosalind Franklin', 'Researcher', 'USA')
+g2 = Garden('Jane Smith', 'Vital Voices Member', 'USA')
 g3 = Garden('Michelle Obama', 'First Lady', 'USA')
 g4 = Garden('Beyonce', 'Performer', 'USA')
 g5 = Garden('Aung San Suu Kyi', 'Politician', 'Myanmar')
@@ -179,22 +180,29 @@ g5 = Garden('Aung San Suu Kyi', 'Politician', 'Myanmar')
 g3.addComment(g1.get_ID(), 2, "Michelle Obama promotes community farming")#1
 g3.addComment(g1.get_ID(), 5, "Michelle serves as a role model for women everywhere")#2
 g4.addComment(g2.get_ID(), 3, "Beyonce appeals to a global community to spread her message")#3
-g3.addComment(g2.get_ID(), 3, "Michelle fights for LGBT rights")#5
-g3.addComment(g1.get_ID(), 2, "Michelle is working to wipe out childhood obesity")#6
-g3.addComment(g5.get_ID(), 2, "Michelle is family oriented")#7
+g3.addComment(g2.get_ID(), 3, "Michelle fights for LGBT rights")#4
+g3.addComment(g1.get_ID(), 2, "Michelle is working to wipe out childhood obesity")#5
+g3.addComment(g5.get_ID(), 2, "Michelle is family oriented")#6
+g2.addComment(g4.get_ID(), 1, "Jane is one of the most driven people I know" )#8
+
 
 #g1.addComment(g2.get_ID(), 4, "Kate writing a story about Rosemary")#4
 
 
-g1.likeComment(6)
+g1.likeComment(5)
 g2.likeComment(1)# Rosalind likes comment 1
-g2.likeComment(6)
-g3.likeComment(6)
-g4.likeComment(6)
-g5.likeComment(6)
+g2.likeComment(5)
+g3.likeComment(5)
+g4.likeComment(5)
+g5.likeComment(5)
 g3.likeComment(3)
+g5.likeComment(7)
 
 #print(get_comment_influence(1))
+
+##c.execute("""select * from gardenComments""")
+##for row in c.fetchall():
+##    print(row)
 
 #c.execute("""select * from bookmarkedStories""")
 #print(c.fetchall())
